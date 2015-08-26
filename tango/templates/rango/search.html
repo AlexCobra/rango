@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Search{% endblock %}
+
+{% block body_block %}
+
+<div class="page-header">
+        <h1>Search with Rango</h1>
+    </div>
+
+    <div class="row">
+
+        <div class="panel panel-primary">
+            <br/>
+
+            <form class="form-inline" id="user_form" method="post" action="{% url 'search' %}">
+                {% csrf_token %}
+                <!-- Display the search form elements here -->
+                <input class="form-control" type="text" size="50" name="query" value="" id="query" />
+                <input class="btn btn-primary" type="submit" name="submit" value="Search" />
+                <br />
+            </form>
+
+            <div class="panel">
+                {% if result_list %}
+                    <div class="panel-heading">
+                    <h3 class="panel-title">Results</h3>
+                    <!-- Display search results in an ordered list -->
+                    <div class="panel-body">
+                        <div class="list-group">
+                            {% for result in result_list %}
+                                <div class="list-group-item">
+                                    <h4 class="list-group-item-heading"><a href="{{ result.link }}">{{ result.title }}</a></h4>
+                                    <p class="list-group-item-text">{{ result.summary }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+ </div>
+
+{% endblock %}
+
+The template code above performs two key tasks:
+
+        In all scenarios, the template presents a search box and a search buttons within a HTML <form> for users to enter and submit their search queries.
+        If a results_list object is passed to the template’s context when being rendered, the template then iterates through the object displaying the results contained within.
+
+To style the html we have made use of Bootstrap: panels, http://getbootstrap.com/components/#panels, list groups, http://getbootstrap.com/components/#list-group, and inline forms, http://getbootstrap.com/css/#forms-inline.
+
+As you will see from our corresponding view code shortly, a results_list will only be passed to the template engine when there are results to return. There won’t be results for example when a user lands on the search page for the first time - they wouldn’t have posed a query yet!
+15.5.2. Adding the View
+
+With our search template added, we can then add the view which prompts the rendering of our template. Add the following search() view to Rango’s views.py module.
+
+def search(request):
+
+    result_list = []
+
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            # Run our Bing function to get the results list!
+            result_list = run_query(query)
+
+    return render(request, 'rango/search.html', {'result_list': result_list})
+
